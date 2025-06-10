@@ -5,6 +5,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -28,11 +31,23 @@ public class RegisterActivity extends AppCompatActivity {
         EditText password = findViewById(R.id.editTextPassword);
         Button register = findViewById(R.id.buttonRegister);
 
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
         register.setOnClickListener(v -> {
-            // In real app, call Firebase Auth here.
             if (!email.getText().toString().isEmpty() && !password.getText().toString().isEmpty()) {
-                Toast.makeText(this, "Registered", Toast.LENGTH_SHORT).show();
-                finish();
+                String user = email.getText().toString();
+                String pass = password.getText().toString();
+                executor.execute(() -> {
+                    boolean added = DatabaseHelper.registerUser(user, pass);
+                    runOnUiThread(() -> {
+                        if (added) {
+                            Toast.makeText(this, "Registered", Toast.LENGTH_SHORT).show();
+                            finish();
+                        } else {
+                            Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                });
             } else {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             }

@@ -7,6 +7,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -31,15 +34,22 @@ public class LoginActivity extends AppCompatActivity {
         Button login = findViewById(R.id.buttonLogin);
         TextView register = findViewById(R.id.textRegister);
 
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
         login.setOnClickListener(v -> {
             String user = email.getText().toString();
             String pass = password.getText().toString();
-            if ("user@example.com".equals(user) && "password".equals(pass)) {
-                startActivity(new Intent(this, MainActivity.class));
-                finish();
-            } else {
-                Toast.makeText(this, "Invalid credentials", Toast.LENGTH_SHORT).show();
-            }
+            executor.execute(() -> {
+                boolean success = DatabaseHelper.checkUser(user, pass);
+                runOnUiThread(() -> {
+                    if (success) {
+                        startActivity(new Intent(this, MainActivity.class));
+                        finish();
+                    } else {
+                        Toast.makeText(this, "Invalid credentials", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            });
         });
 
         register.setOnClickListener(v -> {
